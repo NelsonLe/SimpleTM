@@ -1,4 +1,12 @@
 __pycache__/
 *.py[cod]
 .DS_Store
-dataset/
+dataset/electricity
+dataset/ETT-small
+dataset/PEMS
+dataset/Solar
+dataset/traffic
+dataset/weather
+/.idea
+/checkpoints
+result_long_term_forecast.txt
