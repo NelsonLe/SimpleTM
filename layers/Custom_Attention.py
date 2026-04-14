@@ -53,3 +53,22 @@ class GeometricAttention(nn.Module):
     if self.output_attention:
       return V.contiguous(),A
     return V.contiguous(), None
+
+class CustomAttentionLayer(nn.Module):
+  def __init__(self,attention,d_model,projection_dropout=0.0,):
+    super().__init__()
+    self.inner_attention=attention
+    self.query_projection=nn.Sequential(nn.Linear(d_model, d_model),nn.Dropout(projection_dropout))
+    self.key_projection=nn.Sequential(nn.Linear(d_model, d_model),nn.Dropout(projection_dropout))
+    self.value_projection=nn.Sequential(nn.Linear(d_model, d_model),nn.Dropout(projection_dropout))
+    self.out_projection=nn.Linear(d_model, d_model)
+  def forward(self,queries,keys,values,attn_mask=None,tau=None,delta=None):
+    B,L,D=queries.shape
+    _,S,_=keys.shape
+    queries=self.query_projection(queries).view(B,L,1,D)
+    keys=self.key_projection(keys).view(B,S,1,D)
+    values=self.value_projection(values).view(B,S,1,D)
+    out,attn=self.inner_attention(queries,keys,values,attn_mask=attn_mask)
+    out=out.reshape(B,L,D)
+    out=self.out_projection(out)
+    return out,attn
