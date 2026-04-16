@@ -15,7 +15,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--model', type=str, required=True, default='SimpleTM',
                         help='model name, options: [SimpleTM]')
-
+    parser.add_argument('--attention_type', type=str, default='geom',
+                    help='attention type: standard or geom')
     # data loader
     parser.add_argument('--data', type=str, required=True, default='custom', help='dataset type')
     parser.add_argument('--root_path', type=str, default='./data/electricity/', help='root path of the data file')

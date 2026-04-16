@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from layers.Transformer_Encoder import Encoder, EncoderLayer
-from layers.SWTAttention_Family import GeomAttentionLayer, GeomAttention
+from layers.SWTAttention_Family import GeomAttentionLayer, GeomAttention, StandardAttentionLayer, StandardAttention
 from layers.Embed import DataEmbedding_inverted
 
 
@@ -16,13 +16,39 @@ class Model(nn.Module):
         self.geomattn_dropout = configs.geomattn_dropout
         self.alpha = configs.alpha
         self.kernel_size = configs.kernel_size
-
+        #geom or standard attention
+        self.attention_type = getattr(configs, 'attention_type', 'geom')
         enc_embedding = DataEmbedding_inverted(configs.seq_len, configs.d_model, 
                                                configs.embed, configs.freq, configs.dropout)
         self.enc_embedding = enc_embedding
 
-        encoder = Encoder(
-            [  
+        if self.attention_type == 'standard':
+            print(f"Using STANDARD Transformer Attention (vanilla)")
+            attention_layers = [
+                EncoderLayer(
+                    StandardAttentionLayer(
+                        StandardAttention(
+                            False, configs.factor, attention_dropout=configs.dropout, 
+                            output_attention=configs.output_attention, alpha=self.alpha
+                        ),
+                        configs.d_model,
+                        d_channel=configs.dec_in,
+                        geomattn_dropout=self.geomattn_dropout,
+                        # Pass compatibility params (ignored by StandardAttentionLayer)
+                        requires_grad=configs.requires_grad,
+                        wv=configs.wv,
+                        m=configs.m,
+                        kernel_size=self.kernel_size
+                    ),
+                    configs.d_model,
+                    configs.d_ff,
+                    dropout=configs.dropout,
+                    activation=configs.activation,
+                ) for l in range(configs.e_layers)
+            ]
+        else:  # 'geom' or default
+            print(f"Using GEOMETRIC Attention with Wavelets (alpha={self.alpha})")
+            attention_layers = [
                 EncoderLayer(
                     GeomAttentionLayer(
                         GeomAttention(
@@ -41,11 +67,15 @@ class Model(nn.Module):
                     configs.d_ff,
                     dropout=configs.dropout,
                     activation=configs.activation,
-                ) for l in range(configs.e_layers) 
-            ],
+                ) for l in range(configs.e_layers)
+            ]
+ 
+        encoder = Encoder(
+            attention_layers,
             norm_layer=torch.nn.LayerNorm(configs.d_model)
         )
         self.encoder = encoder
+ 
 
         projector = nn.Linear(configs.d_model, self.pred_len, bias=True)
         self.projector = projector

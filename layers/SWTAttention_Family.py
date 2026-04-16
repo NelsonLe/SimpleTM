@@ -172,3 +172,96 @@ class GeomAttention(nn.Module):
             return V.contiguous()
         else:
             return (V.contiguous(), scores.abs().mean())
+        
+class StandardAttention(nn.Module):
+    """
+    Standard scaled dot-product attention from 'Attention Is All You Need'.
+    No geometric components, no wavelet transforms - just vanilla attention.
+    """
+    def __init__(self, mask_flag=False, factor=5, scale=None, attention_dropout=0.1, 
+                 output_attention=False, alpha=1.0):
+        super(StandardAttention, self).__init__()
+        self.scale = scale
+        self.mask_flag = mask_flag
+        self.output_attention = output_attention
+        self.dropout = nn.Dropout(attention_dropout)
+        # alpha is ignored for standard attention (kept for API compatibility)
+ 
+    def forward(self, queries, keys, values, attn_mask=None):
+        B, L, H, E = queries.shape
+        _, S, _, D = values.shape
+        scale = self.scale or 1. / sqrt(E)
+ 
+        # Standard scaled dot-product attention: Q*K^T / sqrt(d_k)
+        scores = torch.einsum("blhe,bshe->bhls", queries, keys) * scale
+ 
+        # Apply mask if needed
+        if self.mask_flag:
+            if attn_mask is None:
+                attn_mask = torch.tril(torch.ones(L, S)).to(scores.device)
+            scores.masked_fill_(attn_mask.unsqueeze(1).unsqueeze(2) == 0, float('-inf'))
+ 
+        # Softmax and dropout
+        A = self.dropout(torch.softmax(scores, dim=-1))
+ 
+        # Apply attention to values
+        V = torch.einsum("bhls,bshd->blhd", A, values)
+ 
+        if self.output_attention:
+            return V.contiguous(), A
+        else:
+            return V.contiguous(), scores.abs().mean()
+ 
+ # Standard Attention Layer
+class StandardAttentionLayer(nn.Module):
+    """
+    Standard attention layer without wavelet transforms.
+    Compatible with GeomAttentionLayer interface for easy switching.
+    """
+    def __init__(self, attention, d_model, d_channel=None, geomattn_dropout=0.5,
+                 # These parameters are ignored but kept for API compatibility:
+                 requires_grad=True, wv='db2', m=2, kernel_size=None):
+        super(StandardAttentionLayer, self).__init__()
+ 
+        self.d_channel = d_channel
+        self.inner_attention = attention
+        
+        # Standard projections (no wavelet transforms)
+        self.query_projection = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.Dropout(geomattn_dropout)
+        )
+        self.key_projection = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.Dropout(geomattn_dropout)
+        )
+        self.value_projection = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.Dropout(geomattn_dropout)
+        )
+        self.out_projection = nn.Linear(d_model, d_model)
+        
+    def forward(self, queries, keys, values, attn_mask=None, tau=None, delta=None):
+        B, L, D = queries.shape
+        
+        # Project queries, keys, values
+        # Shape: [B, L, D] -> [B, L, D]
+        queries = self.query_projection(queries)
+        keys = self.key_projection(keys)
+        values = self.value_projection(values)
+        
+        # Reshape for multi-head attention
+        # Treat the channel dimension as "heads" for compatibility
+        # Shape: [B, L, D] -> [B, L, 1, D] (single head, or use d_channel as num_heads)
+        queries = queries.unsqueeze(2)  # [B, L, 1, D]
+        keys = keys.unsqueeze(2)        # [B, S, 1, D]
+        values = values.unsqueeze(2)    # [B, S, 1, D]
+ 
+        # Apply attention
+        out, attn = self.inner_attention(queries, keys, values, attn_mask)
+ 
+        # Reshape back and project
+        out = out.squeeze(2)  # [B, L, 1, D] -> [B, L, D]
+        out = self.out_projection(out)
+ 
+        return out, attn
