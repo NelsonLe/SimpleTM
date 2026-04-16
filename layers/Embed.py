@@ -2,9 +2,13 @@ import torch
 import torch.nn as nn
 
 class DataEmbedding_inverted(nn.Module):
-    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1):
+    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1,
+                 use_projection=True):
         super(DataEmbedding_inverted, self).__init__()
-        self.value_embedding = nn.Linear(c_in, d_model)
+        if use_projection:
+            self.value_embedding = nn.Linear(c_in, d_model)
+        else:
+            self.value_embedding = nn.Identity()
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, x_mark):

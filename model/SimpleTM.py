@@ -17,8 +17,16 @@ class Model(nn.Module):
         self.alpha = configs.alpha
         self.kernel_size = configs.kernel_size
 
-        enc_embedding = DataEmbedding_inverted(configs.seq_len, configs.d_model, 
-                                               configs.embed, configs.freq, configs.dropout)
+        # handles using a projection
+        # if so, we want d_model to be replaced by sequence length
+        self.use_projection = configs.use_projection
+        self.d_model = configs.d_model if self.use_projection else self.seq_len
+
+        enc_embedding = DataEmbedding_inverted(configs.seq_len, self.d_model, 
+                                               configs.embed, configs.freq, configs.dropout,
+                                               
+                                               # add ablation flag for use of linear projection
+                                               use_projection=self.use_projection)
         self.enc_embedding = enc_embedding
 
         encoder = Encoder(
@@ -29,7 +37,7 @@ class Model(nn.Module):
                             False, configs.factor, attention_dropout=configs.dropout, 
                             output_attention=configs.output_attention, alpha=self.alpha
                         ),
-                        configs.d_model, 
+                        self.d_model, 
                         requires_grad=configs.requires_grad, 
                         wv=configs.wv, 
                         m=configs.m, 
@@ -37,17 +45,17 @@ class Model(nn.Module):
                         kernel_size=self.kernel_size, 
                         geomattn_dropout=self.geomattn_dropout
                     ),
-                    configs.d_model,
+                    self.d_model,
                     configs.d_ff,
                     dropout=configs.dropout,
                     activation=configs.activation,
-                ) for l in range(configs.e_layers) 
+                ) for l in range(configs.e_layers)
             ],
-            norm_layer=torch.nn.LayerNorm(configs.d_model)
+            norm_layer=torch.nn.LayerNorm(self.d_model)
         )
         self.encoder = encoder
 
-        projector = nn.Linear(configs.d_model, self.pred_len, bias=True)
+        projector = nn.Linear(self.d_model, self.pred_len, bias=True)
         self.projector = projector
 
 

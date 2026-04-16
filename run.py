@@ -95,6 +95,9 @@ if __name__ == '__main__':
     parser.add_argument('--output_attention', action='store_true', help='Set to False to output attn, which can be used to compute training loss')
 
     parser.add_argument('--fix_seed', type=int, default=2025, help='gpu')
+
+    # Ablation arguments
+    parser.add_argument("--use_projection", type=bool, default=True, help="Use a linear projection of the time tokens as the input to the Wavelet transform.")
     
     args = parser.parse_args()
     args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False
@@ -112,15 +115,17 @@ if __name__ == '__main__':
 
     print('Args in experiment:')
     print(args)
+    projection_used = "projection" if args.use_projection else "noprojection"
 
     Exp = Exp_Long_Term_Forecast
 
     if args.is_training:
         for ii in range(args.itr):
             # setting record of experiments
-            setting = '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}'.format(
+            setting = '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}'.format(
                 args.model_id, 
                 args.data,
+                projection_used, # for ablation studies - is the linear projection used or replaced with identity?
                 args.seq_len,
                 args.pred_len,
                 args.d_model,
@@ -153,8 +158,9 @@ if __name__ == '__main__':
     else:
       
         ii = 0
-        setting = '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}'.format(
+        setting = '{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}'.format(
             args.data,
+            projection_used, # for ablation studies - is the linear projection used or replaced with identity?
             args.seq_len,
             args.pred_len,
             args.d_model,
