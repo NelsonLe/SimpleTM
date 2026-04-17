@@ -25,8 +25,8 @@ class Model(nn.Module):
         enc_embedding = DataEmbedding_inverted(configs.seq_len, self.d_model, 
                                                configs.embed, configs.freq, configs.dropout,
                                                
-                                               # add ablation flag for use of linear projection
-                                               use_projection=self.use_projection)
+                                               # add ablation flag for use of different projections
+                                               use_projection=self.use_projection, channels=configs.enc_in)
         self.enc_embedding = enc_embedding
 
         encoder = Encoder(

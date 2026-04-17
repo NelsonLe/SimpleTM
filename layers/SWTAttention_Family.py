@@ -3,11 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from math import sqrt
 import pywt
-
-class ConvEmbedding(nn.Module):
-    def __init__(self):
         
-        pass
 
 class WaveletEmbedding(nn.Module):
     def __init__(self, d_channel=16, swt=True, requires_grad=False, wv='db2', m=2,

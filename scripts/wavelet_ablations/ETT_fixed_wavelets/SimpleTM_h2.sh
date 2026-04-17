@@ -1,5 +1,5 @@
 export CUDA_VISIBLE_DEVICES=0
-model_name=SimpleTMFixed
+model_name=SimpleTM
 
 python -u run.py \
   --is_training 1 \
