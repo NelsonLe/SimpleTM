@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from layers.Transformer_Encoder import Encoder, EncoderLayer
-from layers.SWTAttention_Family import GeomAttentionLayer, GeomAttention
+from layers.Custom_Attention import CustomAttentionLayer, VanillaAttention, GeometricAttention
 from layers.Embed import DataEmbedding_inverted
 
 
@@ -16,6 +16,7 @@ class Model(nn.Module):
         self.geomattn_dropout = configs.geomattn_dropout
         self.alpha = configs.alpha
         self.kernel_size = configs.kernel_size
+        self.is_geometric = getattr(configs, "is_geometric", False)
 
         enc_embedding = DataEmbedding_inverted(configs.seq_len, configs.d_model, 
                                                configs.embed, configs.freq, configs.dropout)
@@ -24,18 +25,21 @@ class Model(nn.Module):
         encoder = Encoder(
             [  
                 EncoderLayer(
-                    GeomAttentionLayer(
-                        GeomAttention(
-                            False, configs.factor, attention_dropout=configs.dropout, 
-                            output_attention=configs.output_attention, alpha=self.alpha
+                    CustomAttentionLayer(
+                        GeometricAttention(
+                            scale=None,
+                            mask_flag=False,
+                            attention_dropout=configs.dropout,
+                            output_attention=configs.output_attention,
+                            alpha=self.alpha
+                        ) if self.is_geometric else VanillaAttention(
+                            scale=None,
+                            mask_flag=False,
+                            attention_dropout=configs.dropout,
+                            output_attention=configs.output_attention
                         ),
                         configs.d_model, 
-                        requires_grad=configs.requires_grad, 
-                        wv=configs.wv, 
-                        m=configs.m, 
-                        d_channel=configs.dec_in, 
-                        kernel_size=self.kernel_size, 
-                        geomattn_dropout=self.geomattn_dropout
+                        projection_dropout=self.geomattn_dropout
                     ),
                     configs.d_model,
                     configs.d_ff,
