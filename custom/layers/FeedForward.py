@@ -24,15 +24,12 @@ class FeedForward(nn.Module):
     
     def forward(self, x):
 
-        # x: BxL'xC
-        # transposed: BxCxL'
-        x_trans = x.transpose(-1, 1)
-
+        # x: BxCxL'
         # first linear output: BxCxL''
-        out1 = self.dropout1(self.activation(self.lin1(x_trans)))
+        out1 = self.dropout1(self.activation(self.lin1(x)))
 
         # second linear output: BxCxL'
-        out2 = self.dropout2(self.lin2(out1)).transpose(-1, 1)
+        out2 = self.dropout2(self.lin2(out1))
 
         # residual connection and layernorm
         out2 += x

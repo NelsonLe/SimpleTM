@@ -70,7 +70,6 @@ class WaveletDecomposition(WaveletLayer):
         
         # finally, save approximate coefficients
         coeffs[:,:,0,:] = approx
-
         return coeffs
 
     

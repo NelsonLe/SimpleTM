@@ -43,7 +43,6 @@ class SelfAttentionLayer(nn.Module):
 
     # layer outputs: BxCx(M+1)xL'
     projection_out = self.out_projection(attn_out.permute(0, 3, 2, 1))
-
     return projection_out
 
 class VanillaAttention(nn.Module):
@@ -108,5 +107,4 @@ class GeometricAttention(nn.Module):
 
     # attention dot values: BxL'x(M+1)xC
     attn_out = torch.einsum("bhls,bshd->blhd", A, values)
-    
     return attn_out.contiguous()
