@@ -22,3 +22,18 @@ class TimeProjection(nn.Module):
     
     def forward(self, x):
         return self.dropout_layer(self.linear_layer(x))
+
+class Residual(nn.Module):
+    def __init__(self, residual_layer, pseudo_length, dropout=0.1):
+        super().__init__()
+
+        self.pseudo_length = pseudo_length
+        self.dropout = dropout
+
+        # layers
+        self.residual_layer = residual_layer
+        self.dropout_layer = nn.Dropout(dropout)
+        self.layer_norm = nn.LayerNorm(self.pseudo_length)
+    
+    def forward(self, x):
+        return self.layer_norm(x + self.dropout_layer(self.residual_layer(x)))

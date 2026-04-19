@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from pywt import Wavelet
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class WaveletLayer(nn.Module, ABC):
@@ -25,6 +25,7 @@ class WaveletLayer(nn.Module, ABC):
         self.detail_weights = nn.Parameter(detail_weights.expand(self.channels, 1, self.kernel_size), requires_grad=self.learnable_wavelets)
         self.approx_weights = nn.Parameter(approx_weights.expand(self.channels, 1, self.kernel_size), requires_grad=self.learnable_wavelets)
     
+    @abstractmethod
     def forward(self, x):
         raise NotImplementedError("Subclasses must implement forward")
 
@@ -99,7 +100,7 @@ class WaveletReconstruction(WaveletLayer):
             dilation = 2 ** (self.m - (i + 1))
 
             # same story with padding
-            padding = dilation * (self.kernel_size * 1)
+            padding = dilation * (self.kernel_size - 1)
             padding_l = (self.kernel_size * dilation) // 2
             pad = (padding_l, padding - padding_l)
 
