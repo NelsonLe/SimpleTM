@@ -118,6 +118,6 @@ class CustomTM(nn.Module):
         if self.normalize:
             std_readd = x_std.repeat(1, self.prediction_length, 1)
             mean_readd = x_mean.repeat(1, self.prediction_length, 1)
-            output = (x * std_readd) + mean_readd
+            output = (output * std_readd) + mean_readd
         
         return output
