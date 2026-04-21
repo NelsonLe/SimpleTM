@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
-from custom.layers.Projections import Permutation, TimeProjection, Residual
-from custom.layers.Wavelets import WaveletDecomposition, WaveletReconstruction
-from custom.layers.Attention import VanillaAttention, GeometricAttention, SelfAttentionLayer
-from custom.layers.FeedForward import FeedForward
+from layers.Projections import Permutation, TimeProjection, Residual
+from layers.Wavelets import WaveletDecomposition, WaveletReconstruction
+from layers.Attention import VanillaAttention, GeometricAttention, SelfAttentionLayer
+from layers.FeedForward import FeedForward
 
 class CustomTM(nn.Module):
     def __init__(self, configs):

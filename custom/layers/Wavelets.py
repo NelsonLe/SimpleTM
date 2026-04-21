@@ -21,9 +21,21 @@ class WaveletLayer(nn.Module, ABC):
     def initialize_weights(self, detail_init, approx_init):
         detail_weights = torch.tensor(detail_init, dtype=torch.float32)
         approx_weights = torch.tensor(approx_init, dtype=torch.float32)
+
         self.kernel_size = detail_weights.shape[0]
-        self.detail_weights = nn.Parameter(detail_weights.expand(self.channels, 1, self.kernel_size), requires_grad=self.learnable_wavelets)
-        self.approx_weights = nn.Parameter(approx_weights.expand(self.channels, 1, self.kernel_size), requires_grad=self.learnable_wavelets)
+
+        # using repeat and clone bc its safer when saving and reloading checkpoitns
+        detail_weights = detail_weights.view(1, 1, self.kernel_size).repeat(self.channels, 1, 1).clone()
+        approx_weights = approx_weights.view(1, 1, self.kernel_size).repeat(self.channels, 1, 1).clone()
+
+        self.detail_weights = nn.Parameter(
+            detail_weights,
+            requires_grad=self.learnable_wavelets
+        )
+        self.approx_weights = nn.Parameter(
+            approx_weights,
+            requires_grad=self.learnable_wavelets
+        )
     
     @abstractmethod
     def forward(self, x):
