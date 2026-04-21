@@ -10,3 +10,4 @@ dataset/weather
 /.idea
 /checkpoints
 result_long_term_forecast.txt
+/custom/runs
