@@ -28,7 +28,7 @@ python custom_run.py \
   --mode train \
   --dataset_type etth2 \
   --data_path data/ETTh2.csv \
-  --save_dir runs/wavelets/etth2_baseline \
+  --save_dir runs/wavelets/etth2_inverted_wavelets \
   --variables 7 \
   --length 96 \
   --prediction_length 96 \
@@ -54,7 +54,7 @@ python custom_run.py \
   --mode train \
   --dataset_type etth2 \
   --data_path data/ETTh2.csv \
-  --save_dir runs/wavelets/etth2_baseline \
+  --save_dir runs/wavelets/etth2_fixed_wavelets \
   --variables 7 \
   --length 96 \
   --prediction_length 96 \
