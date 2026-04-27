@@ -36,6 +36,45 @@ class WaveletLayer(nn.Module, ABC):
             approx_weights,
             requires_grad=self.learnable_wavelets
         )
+
+    def _pad(self, x, pad):
+        if self.pad_mode == "interpolate":
+            return self._interpolate_pad(x, pad)
+        return F.pad(x, pad, mode=self.pad_mode)
+
+    def _interpolate_pad(self, x, pad):
+        left_pad, right_pad = pad
+        parts = []
+
+        if left_pad > 0:
+            if x.shape[-1] < 2:
+                left = x[..., :1].expand(*x.shape[:-1], left_pad)
+            else:
+                left_slope = x[..., 1:2] - x[..., 0:1]
+                steps = torch.arange(
+                    left_pad, 0, -1,
+                    device=x.device,
+                    dtype=x.dtype
+                ).view(*([1] * (x.dim() - 1)), left_pad)
+                left = x[..., :1] - steps * left_slope
+            parts.append(left)
+
+        parts.append(x)
+
+        if right_pad > 0:
+            if x.shape[-1] < 2:
+                right = x[..., -1:].expand(*x.shape[:-1], right_pad)
+            else:
+                right_slope = x[..., -1:] - x[..., -2:-1]
+                steps = torch.arange(
+                    1, right_pad + 1,
+                    device=x.device,
+                    dtype=x.dtype
+                ).view(*([1] * (x.dim() - 1)), right_pad)
+                right = x[..., -1:] + steps * right_slope
+            parts.append(right)
+
+        return torch.cat(parts, dim=-1)
     
     @abstractmethod
     def forward(self, x):
@@ -71,7 +110,7 @@ class WaveletDecomposition(WaveletLayer):
             padding = dilation * (self.kernel_size - 1)
             padding_r = (self.kernel_size * dilation) // 2
             pad = (padding - padding_r, padding_r)
-            approx_padded = F.pad(approx, pad, mode=self.pad_mode)
+            approx_padded = self._pad(approx, pad)
 
             # calculate detail and approx coefficients from wavelet convolution
             detail = F.conv1d(approx_padded, self.detail_weights, dilation=dilation, groups=C)
@@ -116,8 +155,8 @@ class WaveletReconstruction(WaveletLayer):
             pad = (padding_l, padding - padding_l)
 
             # pad both the approx and detail coefficients
-            approx_padded = F.pad(approx, pad, mode=self.pad_mode)
-            detail_padded = F.pad(detail, pad, mode=self.pad_mode)
+            approx_padded = self._pad(approx, pad)
+            detail_padded = self._pad(detail, pad)
 
             # reconstruct signal from approx and detail coefficients
             approx_reconstruct = F.conv1d(approx_padded, self.approx_weights, dilation=dilation, groups=C)
