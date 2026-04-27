@@ -1,0 +1,74 @@
+# baseline using hyperparameters from paper
+python custom_run.py \
+  --mode train \
+  --dataset_type etth2 \
+  --data_path data/ETTh2.csv \
+  --save_dir runs/wavelets/etth2_baseline \
+  --variables 7 \
+  --length 96 \
+  --prediction_length 96 \
+  --pseudo_length 32 \
+  --batch_size 256 \
+  --epochs 10 \
+  --learning_rate 0.006 \
+  --m 3 \
+  --wv bior3.1 \
+  --pad_mode circular \
+  --alpha 0.1 \
+  --attention_dropout 0.1 \
+  --dropout 0.1 \
+  --transformer_layers 1 \
+  --feedforward_dim 32 \
+  --normalize \
+  --is_geometric \
+  --learnable_wavelets
+
+# inverted
+python custom_run.py \
+  --mode train \
+  --dataset_type etth2 \
+  --data_path data/ETTh2.csv \
+  --save_dir runs/wavelets/etth2_baseline \
+  --variables 7 \
+  --length 96 \
+  --prediction_length 96 \
+  --pseudo_length 32 \
+  --batch_size 256 \
+  --epochs 10 \
+  --learning_rate 0.006 \
+  --m 3 \
+  --wv bior3.1 \
+  --pad_mode circular \
+  --alpha 0.1 \
+  --attention_dropout 0.1 \
+  --dropout 0.1 \
+  --transformer_layers 1 \
+  --feedforward_dim 32 \
+  --normalize \
+  --is_geometric \
+  --learnable_wavelets \
+  --inverted
+
+# fixed wavelets
+python custom_run.py \
+  --mode train \
+  --dataset_type etth2 \
+  --data_path data/ETTh2.csv \
+  --save_dir runs/wavelets/etth2_baseline \
+  --variables 7 \
+  --length 96 \
+  --prediction_length 96 \
+  --pseudo_length 32 \
+  --batch_size 256 \
+  --epochs 10 \
+  --learning_rate 0.006 \
+  --m 3 \
+  --wv bior3.1 \
+  --pad_mode circular \
+  --alpha 0.1 \
+  --attention_dropout 0.1 \
+  --dropout 0.1 \
+  --transformer_layers 1 \
+  --feedforward_dim 32 \
+  --normalize \
+  --is_geometric
