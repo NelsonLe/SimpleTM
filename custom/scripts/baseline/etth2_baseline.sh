@@ -21,4 +21,5 @@ python custom_run.py \
   --feedforward_dim 32 \
   --normalize \
   --attention_type geometric \
+  --is_geometric \
   --learnable_wavelets
