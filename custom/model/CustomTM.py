@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from layers.Projections import Permutation, TimeProjection, Residual
 from layers.Wavelets import WaveletDecomposition, WaveletReconstruction
-from layers.Attention import VanillaAttention, GeometricAttention, SelfAttentionLayer
+from layers.Attention import VanillaAttention, GeometricAttention, SelfAttentionLayer, TopKAttention, CosineAttention
 from layers.FeedForward import FeedForward
 
 class CustomTM(nn.Module):
@@ -27,6 +27,8 @@ class CustomTM(nn.Module):
         self.is_geometric       = configs.is_geometric
         self.encoder_activation = configs.encoder_activation
         self.feedforward_dim    = configs.feedforward_dim
+        self.attention_type     = configs.attention_type
+        self.top_k              = configs.top_k
         
         # create model layers
         self.layers = self._create_layers()
@@ -62,15 +64,14 @@ class CustomTM(nn.Module):
             )
             wavelet_attention_layers.append(wavelet_decomp)
 
-            # attention mechanism
-            if self.is_geometric:
-                attention = GeometricAttention(
-                    self.scale, self.attention_dropout, self.alpha
-                )
-            else:
-                attention = VanillaAttention(
-                    self.scale, self.attention_dropout
-                )
+            if self.attention_type == "geometric":
+                attention = GeometricAttention(self.scale, self.attention_dropout, self.alpha)
+            elif self.attention_type == "cosine":
+                attention = CosineAttention(self.scale, self.attention_dropout)
+            elif self.attention_type == "topk":
+                attention = TopKAttention(self.top_k, self.scale, self.attention_dropout)
+            else:  # vanilla
+                attention = VanillaAttention(self.scale, self.attention_dropout)
             attention_layer = SelfAttentionLayer(
                 attention, self.pseudo_length, self.attention_dropout
             )

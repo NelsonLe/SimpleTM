@@ -1,4 +1,5 @@
 import argparse
+from html import parser
 import os
 import random
 from typing import Dict, Tuple
@@ -312,7 +313,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--is_geometric", action="store_true", dest="is_geometric",help="Use geometric (as opposed to vanilla) attention")
     parser.add_argument("--encoder_activation", type=str, default="gelu",choices=["relu", "gelu"],help="Activation function to use in feedforward layers")
     parser.add_argument("--feedforward_dim", type=int, default=32,help="Hidden dimension of feedforward layers")
-
+    parser.add_argument("--attention_type", type=str, default="vanilla", choices=["vanilla", "geometric", "cosine", "topk"], help="Attention mechanism to use")
+    parser.add_argument("--top_k", type=int, default=None, help="Number of keys to attend to in Top-K attention (None = all)")
     return parser
     #TODO: add the following flags...
     # l1 weight
