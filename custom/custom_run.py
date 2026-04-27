@@ -43,6 +43,7 @@ def load_annual_data(data_path: str) -> pd.DataFrame:
     df["date"] = pd.to_datetime(df["date"])
     df = df.pivot(index="date", columns="Country", values="Exchange rate")
     df = df.sort_index()
+    df = df.drop(columns=["Venezuela"])
 
     df = df.replace([np.inf, -np.inf], np.nan)
     df = df.interpolate(limit_direction="both").ffill().bfill()  # fill missing

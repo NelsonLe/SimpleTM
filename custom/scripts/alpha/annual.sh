@@ -48,7 +48,7 @@ for ALPHA in "${ALPHAS[@]}"; do
     --dataset_type annual \
     --data_path "$DATA_PATH" \
     --save_dir "$SAVE_DIR" \
-    --variables 21 \
+    --variables 20 \
     --train_ratio "$TRAIN_RATIO" \
     --val_ratio "$VAL_RATIO" \
     --length "$LENGTH" \
