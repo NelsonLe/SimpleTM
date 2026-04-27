@@ -108,3 +108,51 @@ class GeometricAttention(nn.Module):
     # attention dot values: BxL'x(M+1)xC
     attn_out = torch.einsum("bhls,bshd->blhd", A, values)
     return attn_out.contiguous()
+  
+class CosineAttention(nn.Module):
+    def __init__(self, scale=None, dropout=0.1):
+        super().__init__()
+        self.scale = scale
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, queries, keys, values):
+        # queries, keys, values: BxL'x(M+1)xC
+        E = queries.shape[3]
+        scale = self.scale or 1.0 / sqrt(E)
+
+        # L2-normalize along the embedding dim before dot product
+        q_norm = F.normalize(queries, p=2, dim=-1)
+        k_norm = F.normalize(keys, p=2, dim=-1)
+
+        # cosine similarity scores: Bx(M+1)xL'xL'
+        scores = torch.einsum("blhe,bshe->bhls", q_norm, k_norm) * scale
+        A = self.dropout(torch.softmax(scores, dim=-1))
+
+        attn_out = torch.einsum("bhls,bshd->blhd", A, values)
+        return attn_out.contiguous()
+    
+class TopKAttention(nn.Module):
+    def __init__(self, top_k=None, scale=None, dropout=0.1):
+        super().__init__()
+        self.top_k = top_k  # None = no masking (falls back to vanilla)
+        self.scale = scale
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, queries, keys, values):
+        # queries, keys, values: BxL'x(M+1)xC
+        E = queries.shape[3]
+        scale = self.scale or 1.0 / sqrt(E)
+
+        # dot product scores: Bx(M+1)xL'xL'
+        scores = torch.einsum("blhe,bshe->bhls", queries, keys) * scale
+
+        if self.top_k is not None:
+            k = min(self.top_k, scores.shape[-1])
+            # find the k-th largest value per query row
+            threshold = scores.topk(k, dim=-1).values[..., -1, None]
+            # mask everything below threshold to -inf
+            scores = scores.masked_fill(scores < threshold, float('-inf'))
+
+        A = self.dropout(torch.softmax(scores, dim=-1))
+        attn_out = torch.einsum("bhls,bshd->blhd", A, values)
+        return attn_out.contiguous()

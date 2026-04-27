@@ -20,5 +20,5 @@ python custom_run.py \
   --transformer_layers 1 \
   --feedforward_dim 32 \
   --normalize \
-  --is_geometric \
+  --attention_type geometric \
   --learnable_wavelets

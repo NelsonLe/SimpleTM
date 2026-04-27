@@ -69,7 +69,7 @@ for ALPHA in "${ALPHAS[@]}"; do
     --transformer_layers "$LAYERS" \
     --feedforward_dim "$FF_DIM" \
     --normalize \
-    --is_geometric
+    --attention_type geometric
 
   METRICS="$(tail -n 1 "$SAVE_DIR/test_metrics.csv")"
   echo "annual,${ALPHA},${SEED},${METRICS}" >> "$SUMMARY"
