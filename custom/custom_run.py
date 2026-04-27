@@ -302,7 +302,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--m", type=int, default=None, help="Number of decomposition levels for Wavelet transform")
     parser.add_argument("--learnable_wavelets", action="store_true", dest="learnable_wavelets", help="Allow wavelet convolutions to be learnable")
     parser.add_argument("--wv", type=str, default="db1", help="Wavelet function used for decomposition/initialization")
-    parser.add_argument("--pad_mode", type=str, default="circular", choices=["constant", "reflect", "replicate", "circular", "edge", "interpolate"], help="Padding mode for constant-length wavelet decomposition")
+    parser.add_argument("--pad_mode", type=str, default="circular", choices=["constant", "reflect", "replicate", "circular", "interpolate"], help="Padding mode for constant-length wavelet decomposition")
     parser.add_argument("--inverted", action="store_true", help="Apply linear projection after wavelet decomposition in original time domain")
     parser.add_argument("--alpha", type=float, default=1.0, help="Wedge product weighting in geometric self-attention")
     parser.add_argument("--scale", type=float, default=None, help="Scaling factor for query-key product in self-attention")
