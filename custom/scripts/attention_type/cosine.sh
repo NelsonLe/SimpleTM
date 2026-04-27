@@ -3,7 +3,7 @@ python custom_run.py \
   --mode train \
   --dataset_type etth2 \
   --data_path data/ETTh2.csv \
-  --save_dir runs/baseline/etth2 \
+  --save_dir runs/attention_type/cosine \
   --variables 7 \
   --length 96 \
   --prediction_length 96 \
