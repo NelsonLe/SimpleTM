@@ -31,7 +31,7 @@ class WindowDataset(Dataset):
         y = self.data[idx + self.length : idx + self.length + self.prediction_length]
         return torch.tensor(x), torch.tensor(y)
 
-def load_etth2_data(data_path: str) -> pd.DataFrame:
+def load_ett_data(data_path: str) -> pd.DataFrame:
     df = pd.read_csv(data_path)
     df["date"] = pd.to_datetime(df["date"])  # change type
     df = df.sort_values("date").set_index("date")  # sort date
@@ -52,8 +52,9 @@ def load_annual_data(data_path: str) -> pd.DataFrame:
 
 def preprocess_dataset(
         df: pd.DataFrame,
-        train_ratio: float,
-        val_ratio: float,
+        train_rows: int,
+        val_rows: int,
+        test_rows: int,
         length: int,
         prediction_length: int,
         batch_size: int,
@@ -61,13 +62,13 @@ def preprocess_dataset(
     ) -> Tuple[Dict[str, DataLoader], Dict[str, int]]:
 
     # split
-    n = len(df)
-    train_end = int(n * train_ratio)
-    val_end = int(n * (train_ratio + val_ratio))
+    train_end = train_rows
+    val_end = train_end + val_rows
+    test_end = val_end + test_rows
 
     train_df = df.iloc[:train_end]
-    val_df = df.iloc[train_end:val_end]
-    test_df = df.iloc[val_end:]
+    val_df = df.iloc[train_end-length:val_end]
+    test_df = df.iloc[val_end-length:test_end]
 
     # scale
     scaler = StandardScaler()
@@ -96,8 +97,10 @@ def preprocess_dataset(
             num_workers=num_workers
         )
     }
-
-    meta = {"num_variables": df.shape[1], "train_rows": len(train_df), "val_rows": len(val_df), "test_rows": len(test_df)}
+    train_len = len(loaders["train"].dataset)
+    val_len = len(loaders["val"].dataset)
+    test_len = len(loaders["test"].dataset)
+    meta = {"num_variables": df.shape[1], "train_rows": train_len, "val_rows": val_len, "test_rows": test_len}
 
     return loaders, meta
 
@@ -118,11 +121,24 @@ def get_device(device_arg: str) -> torch.device:
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def make_loaders(args):
-    df = load_etth2_data(args.data_path) if args.dataset_type == "etth2" else load_annual_data(args.data_path)
+    if args.dataset_type == "ett":
+        load_fn = load_ett_data
+        train_rows = 12*30*24
+        val_rows = 4*30*24
+        test_rows = 4*30*24
+    else:
+        assert args.dataset_type == "annual"
+        load_fn = load_annual_data
+        train_rows = 38
+        val_rows = 8
+        test_rows = 8
+
+    df = load_fn(args.data_path)
     return preprocess_dataset(
         df=df,
-        train_ratio=args.train_ratio,
-        val_ratio=args.val_ratio,
+        train_rows=train_rows,
+        val_rows=val_rows,
+        test_rows=test_rows,
         length=args.length,
         prediction_length=args.prediction_length,
         batch_size=args.batch_size,
@@ -193,7 +209,7 @@ def train(args):
     loaders, meta = make_loaders(args)
     model = build_model(args, meta["num_variables"], device)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)#, weight_decay=args.weight_decay)
     criterion = nn.MSELoss()
 
     best_val_loss = float("inf")
@@ -280,20 +296,18 @@ def build_parser() -> argparse.ArgumentParser:
     # @ Nelson, can variables just be inferred from the dataset?
     # not sure how preprocessing works - TGR
     parser.add_argument("--mode", choices=["train", "test"], default="train")
-    parser.add_argument("--dataset_type", choices=["etth2", "annual"], required=True)
+    parser.add_argument("--dataset_type", choices=["ett", "annual"], required=True)
     parser.add_argument("--data_path", type=str, default=None)
     parser.add_argument("--save_dir", type=str, default=None)
     parser.add_argument("--checkpoint_path", type=str, default=None)
 
-    parser.add_argument("--train_ratio", type=float, default=0.7)
-    parser.add_argument("--val_ratio", type=float, default=0.15)
     parser.add_argument("--batch_size", type=int, default=None)
     parser.add_argument("--num_workers", type=int, default=0)
 
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--learning_rate", type=float, default=None)
     parser.add_argument("--weight_decay", type=float, default=0.0)
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--seed", type=int, default=2025)
     parser.add_argument("--device", type=str, default=None)
 
     parser.add_argument("--variables", type=int, default=None, help="Number of variables in multivariate time series data")
@@ -311,18 +325,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--attention_dropout", type=float, default=0.1, help="Dropout ratio for attention layers")
     parser.add_argument("--normalize", action="store_true", dest="normalize", help="Feed normalized data into the model, then unnormalize outputs")
     parser.add_argument("--transformer_layers", type=int, default=1,help="Number of SWT/Attention/ISWT/Feedforward blocks")
-    parser.add_argument("--is_geometric", action="store_true", dest="is_geometric",help="Use geometric (as opposed to vanilla) attention")
     parser.add_argument("--encoder_activation", type=str, default="gelu",choices=["relu", "gelu"],help="Activation function to use in feedforward layers")
     parser.add_argument("--feedforward_dim", type=int, default=32,help="Hidden dimension of feedforward layers")
     parser.add_argument("--attention_type", type=str, default="vanilla", choices=["vanilla", "geometric", "cosine", "topk"], help="Attention mechanism to use")
     parser.add_argument("--top_k", type=int, default=None, help="Number of keys to attend to in Top-K attention (None = all)")
     return parser
-    #TODO: add the following flags...
-    # l1 weight
-    # early stopping rounds/epochs
-    # among various others...
-    # not sure exactly what is/isn't extraneous
-    # - TGR
 
 def main():
     args = build_parser().parse_args()
