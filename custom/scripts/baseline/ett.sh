@@ -9,7 +9,7 @@ for SEED in ${SEEDS[@]}; do
     --mode train \
     --dataset_type ett \
     --data_path data/ETTh2.csv \
-    --save_dir runs/padding/etth2_reflect_"$SEED" \
+    --save_dir runs/baseline/etth2_"$SEED" \
     --variables 7 \
     --length 96 \
     --prediction_length 96 \
@@ -19,7 +19,7 @@ for SEED in ${SEEDS[@]}; do
     --learning_rate 0.006 \
     --m 3 \
     --wv bior3.1 \
-    --pad_mode reflect \
+    --pad_mode circular \
     --alpha 0.1 \
     --attention_dropout 0.5 \
     --dropout 0.1 \
@@ -35,7 +35,7 @@ for SEED in ${SEEDS[@]}; do
     --mode train \
     --dataset_type ett \
     --data_path data/ETTh1.csv \
-    --save_dir runs/padding/etth1_reflect_"$SEED" \
+    --save_dir runs/baseline/etth1_"$SEED" \
     --variables 7 \
     --length 96 \
     --prediction_length 96 \
@@ -45,7 +45,7 @@ for SEED in ${SEEDS[@]}; do
     --learning_rate 0.02 \
     --m 3 \
     --wv db1 \
-    --pad_mode reflect \
+    --pad_mode circular \
     --alpha 0.3 \
     --attention_dropout 0.5 \
     --dropout 0.1 \

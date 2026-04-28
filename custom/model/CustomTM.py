@@ -24,7 +24,6 @@ class CustomTM(nn.Module):
         self.attention_dropout  = configs.attention_dropout
         self.normalize          = configs.normalize
         self.transformer_layers = configs.transformer_layers
-        self.is_geometric       = configs.is_geometric
         self.encoder_activation = configs.encoder_activation
         self.feedforward_dim    = configs.feedforward_dim
         self.attention_type     = configs.attention_type
