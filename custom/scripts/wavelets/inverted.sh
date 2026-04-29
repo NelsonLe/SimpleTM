@@ -1,15 +1,18 @@
-SEEDS=(7 42 67 1738 2025)
+#!/bin/bash
+ENV="./customtm_env"
+
+SEEDS=(0 1 7 42 65 67 1738 2001 2004 2025 2026 27182 31415 77777 99999)
 
 for SEED in ${SEEDS[@]}; do
 
   echo Using seed "$SEED"...
 
   # ETTh2
-  python custom_run.py \
+  "$ENV"/bin/python custom_run.py \
     --mode train \
     --dataset_type ett \
     --data_path data/ETTh2.csv \
-    --save_dir runs/baseline/etth2_inverted_"$SEED" \
+    --save_dir runs/wavelets/etth2_inverted_"$SEED" \
     --variables 7 \
     --length 96 \
     --prediction_length 96 \
@@ -32,11 +35,11 @@ for SEED in ${SEEDS[@]}; do
     --seed "$SEED"
 
   # ETTh1
-  python custom_run.py \
+  "$ENV"/bin/python custom_run.py \
     --mode train \
     --dataset_type ett \
     --data_path data/ETTh1.csv \
-    --save_dir runs/baseline/etth1_inverted_"$SEED" \
+    --save_dir runs/wavelets/etth1_inverted_"$SEED" \
     --variables 7 \
     --length 96 \
     --prediction_length 96 \
