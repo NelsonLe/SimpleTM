@@ -129,9 +129,10 @@ def make_loaders(args):
     else:
         assert args.dataset_type == "annual"
         load_fn = load_annual_data
-        train_rows = 38
-        val_rows = 8
-        test_rows = 8
+        total_rows = len(load_fn(args.data_path))
+        train_rows = int(total_rows * args.train_ratio)
+        val_rows = int(total_rows * args.val_ratio)
+        test_rows = total_rows - train_rows - val_rows
 
     df = load_fn(args.data_path)
     return preprocess_dataset(
@@ -301,6 +302,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--save_dir", type=str, default=None)
     parser.add_argument("--checkpoint_path", type=str, default=None)
 
+    parser.add_argument("--train_ratio", type=float, default=0.6)
+    parser.add_argument("--val_ratio", type=float, default=0.2)
     parser.add_argument("--batch_size", type=int, default=None)
     parser.add_argument("--num_workers", type=int, default=0)
 

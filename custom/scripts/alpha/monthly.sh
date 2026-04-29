@@ -2,16 +2,16 @@
 # alpha=1: wedge/geometric term only
 
 PYTHON_BIN="${PYTHON_BIN:-python}"
-DATA_PATH="${DATA_PATH:-data/ETTh2.csv}"
-OUT_ROOT="${OUT_ROOT:-runs/alpha_etth2}"
+DATA_PATH="${DATA_PATH:-data/monthly.csv}"
+OUT_ROOT="${OUT_ROOT:-runs/alpha_monthly}"
 DEVICE="${DEVICE:-cpu}"   # cuda or cpu
 
 ALPHAS=(0 0.25 0.5 0.75 1)
 SEEDS=(0 1 7 42 65 67 1738 2001 2004 2025 2026 27182 31415 77777 99999)
 
 # shared settings
-LENGTH=96
-PRED_LEN=96
+LENGTH=6
+PRED_LEN=3
 PSEUDO_LEN=32
 M=1
 LAYERS=1
@@ -20,12 +20,12 @@ DROPOUT=0.1
 ATTN_DROPOUT=0.1
 PAD_MODE="circular"
 
-# ETTh2 SimpleTM baseline settings
-BATCH_SIZE=256
+# monthly FX settings; same preprocessing path as annual
+BATCH_SIZE=16
 EPOCHS=10
-LR=0.006
+LR=0.001
 WEIGHT_DECAY=0.0
-WV="bior3.1"
+WV="db1"
 
 mkdir -p "$OUT_ROOT"
 SUMMARY="$OUT_ROOT/summary.csv"
@@ -37,16 +37,16 @@ for ALPHA in "${ALPHAS[@]}"; do
     mkdir -p "$SAVE_DIR"
 
     echo "============================================================"
-    echo "ETTh2 | alpha=${ALPHA} | seed=${SEED}"
+    echo "Monthly FX | alpha=${ALPHA} | seed=${SEED}"
     echo "Saving to: ${SAVE_DIR}"
     echo "============================================================"
 
     "$PYTHON_BIN" custom_run.py \
       --mode train \
-      --dataset_type ett \
+      --dataset_type annual \
       --data_path "$DATA_PATH" \
       --save_dir "$SAVE_DIR" \
-      --variables 7 \
+      --variables 33 \
       --length "$LENGTH" \
       --prediction_length "$PRED_LEN" \
       --pseudo_length "$PSEUDO_LEN" \
@@ -68,7 +68,7 @@ for ALPHA in "${ALPHAS[@]}"; do
       --attention_type geometric
 
     METRICS="$(tail -n 1 "$SAVE_DIR/test_metrics.csv")"
-    echo "etth2,${ALPHA},${SEED},${METRICS}" >> "$SUMMARY"
+    echo "monthly,${ALPHA},${SEED},${METRICS}" >> "$SUMMARY"
   done
 done
 

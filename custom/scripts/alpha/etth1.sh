@@ -2,8 +2,8 @@
 # alpha=1: wedge/geometric term only
 
 PYTHON_BIN="${PYTHON_BIN:-python}"
-DATA_PATH="${DATA_PATH:-data/ETTh2.csv}"
-OUT_ROOT="${OUT_ROOT:-runs/alpha_etth2}"
+DATA_PATH="${DATA_PATH:-data/ETTh1.csv}"
+OUT_ROOT="${OUT_ROOT:-runs/alpha_etth1}"
 DEVICE="${DEVICE:-cpu}"   # cuda or cpu
 
 ALPHAS=(0 0.25 0.5 0.75 1)
@@ -20,7 +20,7 @@ DROPOUT=0.1
 ATTN_DROPOUT=0.1
 PAD_MODE="circular"
 
-# ETTh2 SimpleTM baseline settings
+# ETTh1 SimpleTM baseline settings; copied from ETTh2 alpha script
 BATCH_SIZE=256
 EPOCHS=10
 LR=0.006
@@ -37,7 +37,7 @@ for ALPHA in "${ALPHAS[@]}"; do
     mkdir -p "$SAVE_DIR"
 
     echo "============================================================"
-    echo "ETTh2 | alpha=${ALPHA} | seed=${SEED}"
+    echo "ETTh1 | alpha=${ALPHA} | seed=${SEED}"
     echo "Saving to: ${SAVE_DIR}"
     echo "============================================================"
 
@@ -68,7 +68,7 @@ for ALPHA in "${ALPHAS[@]}"; do
       --attention_type geometric
 
     METRICS="$(tail -n 1 "$SAVE_DIR/test_metrics.csv")"
-    echo "etth2,${ALPHA},${SEED},${METRICS}" >> "$SUMMARY"
+    echo "etth1,${ALPHA},${SEED},${METRICS}" >> "$SUMMARY"
   done
 done
 
