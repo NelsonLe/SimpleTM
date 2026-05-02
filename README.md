@@ -4,5 +4,5 @@ This repo is a reimplementation and study of the SimpleTM model presented here: 
 
 
 
-!\[DL Day Poster](dl\_day\_poster.jpg?raw=true)
+!\[DL Day Poster](dl_day_poster.jpg)
 
